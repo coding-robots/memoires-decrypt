@@ -1,0 +1,33 @@
+File Format of Encrypted Journals in Mémoires 4
+===============================================
+
+Position  Length  Description
+    0      8      Identification string ("MEM_encr")
+    8      1      Format version (currently 1)
+    9      1      scrypt log(N)
+   10      1      scrypt log(r)
+   11      1      scrypt log(p)
+   12     32      scrypt salt
+   44     16      Encryption IV
+   60     32      Header hash         BLAKE2b(0..60)
+   92     32      Header MAC          BLAKE2b(MAC_key, 0..92)
+  124      *      Encrypted content   AES-256-CBC(Encryption_key, iv, 124..*)
+ *-32     32      MAC                 BLAKE2b(MAC_Key, 0..*-32)
+
+
+Key derivation:
+
+   MAC_key, Encryption_key = scrypt(salt, password, N, r, p, 64)
+
+   Length of MAC_key: 32 bytes
+   Length of Encryption_key: 32 bytes
+
+Hashing and MAC:
+
+    Header hash: BLAKE2b with 32-byte output.
+    Header MAC and content MAC: keyed BLAKE2b with 32-byte output.
+
+Encryption:
+
+    AES-256 in CBC mode with randomly generated IV.
+    PKCS#7 padding.
