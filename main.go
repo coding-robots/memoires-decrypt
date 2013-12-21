@@ -127,9 +127,16 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 	dec := cipher.NewCBCDecrypter(a, iv)
 	dec.CryptBlocks(out, content)
 
-	// Strip padding.
+	// Check and strip padding.
 	n := out[len(out)-1]
 	if n <= 0 || n > aes.BlockSize {
+		return ErrCorrupted
+	}
+	x := int(n)
+	for _, v := range out[len(out)-int(n):] {
+		x -= subtle.ConstantTimeByteEq(v, n)
+	}
+	if x != 0 {
 		return ErrCorrupted
 	}
 	out = out[:len(out)-int(n)]
