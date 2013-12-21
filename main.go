@@ -132,6 +132,7 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 	if n <= 0 || n > aes.BlockSize {
 		return ErrCorrupted
 	}
+	//TODO(dchest): make constant-time for awesomeness.
 	for _, v := range out[len(out)-int(n):] {
 		if v != n {
 			return ErrCorrupted
