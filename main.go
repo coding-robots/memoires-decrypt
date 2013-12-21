@@ -129,7 +129,7 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 
 	// Strip padding.
 	n := out[len(out)-1]
-	if n > aes.BlockSize {
+	if n <= 0 || n > aes.BlockSize {
 		return ErrCorrupted
 	}
 	out = out[:len(out)-int(n)]
