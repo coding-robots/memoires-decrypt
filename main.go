@@ -132,12 +132,10 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 	if n <= 0 || n > aes.BlockSize {
 		return ErrCorrupted
 	}
-	x := int(n)
 	for _, v := range out[len(out)-int(n):] {
-		x -= subtle.ConstantTimeByteEq(v, n)
-	}
-	if x != 0 {
-		return ErrCorrupted
+		if v != n {
+			return ErrCorrupted
+		}
 	}
 	out = out[:len(out)-int(n)]
 
