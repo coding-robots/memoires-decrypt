@@ -96,12 +96,10 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 	}
 
 	// Derive keys.
-	keys, err := deriveKeys(password, salt, logN, logR, logP)
+	mackey, enckey, err := deriveKeys(password, salt, logN, logR, logP)
 	if err != nil {
 		return err
 	}
-	mackey := keys[0:32]
-	enckey := keys[32:64]
 
 	// Check header MAC.
 	h := blake2b.NewMAC(32, mackey)
@@ -146,19 +144,24 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 	return nil
 }
 
-func deriveKeys(password, salt []byte, logN, logR, logP uint8) ([]byte, error) {
+func deriveKeys(password, salt []byte, logN, logR, logP uint8) (mackey []byte, enckey []byte, err error) {
 	if logN > 32 {
-		return nil, errors.New("logN is too large")
+		return nil, nil, errors.New("logN is too large")
 	}
 	if logR > 6 {
-		return nil, errors.New("logR is too large")
+		return nil, nil, errors.New("logR is too large")
 	}
 	if logP > 6 {
-		return nil, errors.New("logP is too large")
+		return nil, nil, errors.New("logP is too large")
 	}
 	N := int(1 << uint(logN))
 	r := int(1 << uint(logR))
 	p := int(1 << uint(logP))
-	log.Print(N, r, p)
-	return scrypt.Key(password, salt, N, r, p, 64)
+	dk, err := scrypt.Key(password, salt, N, r, p, 64)
+	if err != nil {
+		return nil, nil, err
+	}
+	mackey = dk[0:32]
+	enckey = dk[32:64]
+	return
 }
