@@ -13,6 +13,13 @@ We support open standards and data portability.
 
 ## Installation
 
+### Binary
+
+Download a binary for your operating system from
+[releases](https://github.com/coding-robots/memoires-decrypt/releases/).
+
+### Sources
+
 To install the program from sources, first install [Go programming language][go].
 Then type the following command in Terminal:
 
