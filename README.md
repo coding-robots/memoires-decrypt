@@ -1,5 +1,7 @@
 # memoires-decrypt
 
+[![Build Status](https://travis-ci.org/coding-robots/memoires-decrypt.png)](https://travis-ci.org/coding-robots/memoires-decrypt)
+
 This cross-platform command-line program decrypts journals encrypted with
 [Mémoires 4.0][mem] and later.  The result of decryption is the original
 unencrypted journal (which is an SQLite database file).
@@ -9,7 +11,6 @@ unencrypted journal (which is an SQLite database file).
 The program is freely available under the 2-clause BSD license as an
 anti-lock in initiative of [Coding Robots][cr], makers of Mémoires.
 We support open standards and data portability.
-
 
 ## Installation
 
