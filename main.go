@@ -81,9 +81,7 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 	}
 
 	// Read KDF parameters.
-	logN := header[9]
-	logR := header[10]
-	logP := header[11]
+	logN, logR, logP := header[9], header[10], header[11]
 	salt := header[12:44]
 
 	// Read IV for encryption.
@@ -96,13 +94,13 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 	}
 
 	// Derive keys.
-	mackey, enckey, err := deriveKeys(password, salt, logN, logR, logP)
+	macKey, encKey, err := deriveKeys(password, salt, logN, logR, logP)
 	if err != nil {
 		return err
 	}
 
 	// Check header MAC.
-	h := blake2b.NewMAC(32, mackey)
+	h := blake2b.NewMAC(32, macKey)
 	h.Write(header[:92])
 	if subtle.ConstantTimeCompare(h.Sum(nil), header[92:124]) != 1 {
 		return ErrWrongPassword
@@ -119,7 +117,7 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 	if len(content)%aes.BlockSize != 0 {
 		return ErrCorrupted
 	}
-	a, err := aes.NewCipher(enckey)
+	a, err := aes.NewCipher(encKey)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -150,7 +148,7 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 	return nil
 }
 
-func deriveKeys(password, salt []byte, logN, logR, logP uint8) (mackey []byte, enckey []byte, err error) {
+func deriveKeys(password, salt []byte, logN, logR, logP uint8) (macKey []byte, encKey []byte, err error) {
 	if logN > 32 {
 		return nil, nil, errors.New("logN is too large")
 	}
@@ -167,7 +165,7 @@ func deriveKeys(password, salt []byte, logN, logR, logP uint8) (mackey []byte, e
 	if err != nil {
 		return nil, nil, err
 	}
-	mackey = dk[0:32]
-	enckey = dk[32:64]
+	macKey = dk[0:32]
+	encKey = dk[32:64]
 	return
 }
