@@ -31,7 +31,7 @@ This command will install `memoires-decrypt` into your $GOPATH/bin directory.
 
 ## Usage
 
-	memoires-decrypt -p="password" -in="encrypted.memoire" out="decrypted.memoire"
+	memoires-decrypt -p="password" -in="encrypted.memoire" -out="decrypted.memoire"
 
 where:
 
