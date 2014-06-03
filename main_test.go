@@ -27,4 +27,11 @@ func TestDecrypt(t *testing.T) {
 	if !bytes.Equal(dec.Bytes(), out) {
 		t.Fatalf("bad decryption")
 	}
+	// Corrupt last block.
+	in[len(in)-1] = 0xff
+	dec.Reset()
+	err = Decrypt(bytes.NewReader(in), &dec, []byte("1234"))
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
 }

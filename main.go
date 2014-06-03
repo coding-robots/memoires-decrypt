@@ -125,18 +125,24 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 	dec := cipher.NewCBCDecrypter(a, iv)
 	dec.CryptBlocks(out, content)
 
+	result := 0
+
 	// Check and strip padding.
-	n := out[len(out)-1]
-	if n <= 0 || n > aes.BlockSize {
+	n := int(out[len(out)-1])
+	result |= subtle.ConstantTimeLessOrEq(n, 0)
+	result |= subtle.ConstantTimeLessOrEq(aes.BlockSize+1, n)
+	result |= subtle.ConstantTimeLessOrEq(len(out)+1, n)
+	var tmp [aes.BlockSize]byte
+	for i := range tmp {
+		tmp[i] = byte(n)
+	}
+	havePad := out[len(out)-n:]
+	needPad := tmp[:n]
+	result |= subtle.ConstantTimeCompare(havePad, needPad)
+	if result != 1 {
 		return ErrCorrupted
 	}
-	//TODO(dchest): make constant-time for awesomeness.
-	for _, v := range out[len(out)-int(n):] {
-		if v != n {
-			return ErrCorrupted
-		}
-	}
-	out = out[:len(out)-int(n)]
+	out = out[:len(out)-n]
 
 	nw, err := w.Write(out)
 	if err != nil {
