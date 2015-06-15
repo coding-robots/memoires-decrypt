@@ -16,8 +16,8 @@ import (
 	"log"
 	"os"
 
-	"golang.org/x/crypto/scrypt"
 	"github.com/dchest/blake2b"
+	"golang.org/x/crypto/scrypt"
 )
 
 var (
@@ -132,14 +132,17 @@ func Decrypt(r io.Reader, w io.Writer, password []byte) error {
 	result |= subtle.ConstantTimeLessOrEq(n, 0)
 	result |= subtle.ConstantTimeLessOrEq(aes.BlockSize+1, n)
 	result |= subtle.ConstantTimeLessOrEq(len(out)+1, n)
-	var tmp [aes.BlockSize]byte
-	for i := range tmp {
-		tmp[i] = byte(n)
+	// Now that we have established whether n is within bounds (this will
+	// influence the final result), make it actually inside bounds.
+	n %= aes.BlockSize + 1
+	haveLastBlock := out[len(out)-aes.BlockSize:]
+	var needLastBlock [aes.BlockSize]byte
+	copy(needLastBlock[:], haveLastBlock)
+	for i := len(needLastBlock) - n; i < len(needLastBlock); i++ {
+		needLastBlock[i] = byte(n)
 	}
-	havePad := out[len(out)-n:]
-	needPad := tmp[:n]
-	result |= subtle.ConstantTimeCompare(havePad, needPad)
-	if result != 1 {
+	result |= subtle.ConstantTimeByteEq(byte(subtle.ConstantTimeCompare(haveLastBlock, needLastBlock[:])), 0)
+	if result != 0 {
 		return ErrCorrupted
 	}
 	out = out[:len(out)-n]
