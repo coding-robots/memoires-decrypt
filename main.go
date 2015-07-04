@@ -16,8 +16,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/dchest/blake2b"
 	"golang.org/x/crypto/scrypt"
+	"stablelib.com/v1/crypto/blake2b"
 )
 
 var (
