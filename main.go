@@ -12,24 +12,28 @@ import (
 	"crypto/subtle"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"syscall"
 
 	"github.com/dchest/blake2b"
 	"golang.org/x/crypto/scrypt"
+	"golang.org/x/term"
 )
 
 var (
-	fPassword = flag.String("p", "", "password")
-	fInFile   = flag.String("in", "", "encrypted journal file")
-	fOutFile  = flag.String("out", "", "decrypted SQLite file")
+	fPassword       = flag.String("p", "", "password")
+	fPasswordPrompt = flag.Bool("pp", false, "prompt for password")
+	fInFile         = flag.String("in", "", "encrypted journal file")
+	fOutFile        = flag.String("out", "", "decrypted SQLite file")
 )
 
 func main() {
 	flag.Parse()
 	log.SetFlags(0)
-	if *fPassword == "" || *fInFile == "" || *fOutFile == "" {
+	if (*fPassword == "" && !*fPasswordPrompt) || *fInFile == "" || *fOutFile == "" {
 		flag.Usage()
 		return
 	}
@@ -43,7 +47,15 @@ func main() {
 		log.Fatal(err)
 	}
 	defer outf.Close()
-	err = Decrypt(inf, outf, []byte(*fPassword))
+	password := []byte(*fPassword)
+	if *fPasswordPrompt {
+		fmt.Print("Enter password: ")
+		password, err = term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	err = Decrypt(inf, outf, password)
 	if err != nil {
 		os.Remove(*fOutFile)
 		log.Fatal(err)
