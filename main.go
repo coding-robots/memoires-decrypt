@@ -16,7 +16,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"syscall"
 
 	"github.com/dchest/blake2b"
 	"golang.org/x/crypto/scrypt"
@@ -50,7 +49,7 @@ func main() {
 	var password []byte
 	if *fPassword == "" {
 		fmt.Print("Enter password: ")
-		password, err = term.ReadPassword(int(syscall.Stdin))
+		password, err = term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
 			log.Fatal(err)
 		}
