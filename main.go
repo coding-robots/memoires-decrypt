@@ -24,16 +24,15 @@ import (
 )
 
 var (
-	fPassword       = flag.String("p", "", "password")
-	fPasswordPrompt = flag.Bool("pp", false, "prompt for password")
-	fInFile         = flag.String("in", "", "encrypted journal file")
-	fOutFile        = flag.String("out", "", "decrypted SQLite file")
+	fPassword = flag.String("p", "", "password (optional - if empty, ask for password)")
+	fInFile   = flag.String("in", "", "encrypted journal file")
+	fOutFile  = flag.String("out", "", "decrypted SQLite file")
 )
 
 func main() {
 	flag.Parse()
 	log.SetFlags(0)
-	if (*fPassword == "" && !*fPasswordPrompt) || *fInFile == "" || *fOutFile == "" {
+	if *fInFile == "" || *fOutFile == "" {
 		flag.Usage()
 		return
 	}
@@ -47,13 +46,16 @@ func main() {
 		log.Fatal(err)
 	}
 	defer outf.Close()
-	password := []byte(*fPassword)
-	if *fPasswordPrompt {
+
+	var password []byte
+	if *fPassword == "" {
 		fmt.Print("Enter password: ")
 		password, err = term.ReadPassword(int(syscall.Stdin))
 		if err != nil {
 			log.Fatal(err)
 		}
+	} else {
+		password = []byte(*fPassword)
 	}
 	err = Decrypt(inf, outf, password)
 	if err != nil {
